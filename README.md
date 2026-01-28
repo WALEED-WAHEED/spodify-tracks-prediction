@@ -1,25 +1,41 @@
-# Spotify Tracks Popularity Prediction Model
+# Canadian Job Market Analysis - Labor Market Trends Prediction
 
-A machine learning model that predicts the popularity of Spotify tracks using linear regression. This model analyzes audio features and metadata to estimate track popularity scores.
+A comprehensive machine learning model that analyzes national job posting trends in Canada to understand labour market demand across occupations, industries, and regions. This model identifies patterns, skills needs, and hiring pressure to generate insights useful for employers, policymakers, and labour market analysts.
 
 ## 📋 Overview
 
-This project implements a Linear Regression model to predict Spotify track popularity based on:
-- **Audio Features**: Danceability, Energy, Valence, Tempo, Loudness, Duration
-- **Metadata**: Explicit content flag
+This project implements advanced machine learning models to analyze Canadian job postings data from the Government of Canada's National Job Bank. The analysis focuses on:
 
-The model uses scikit-learn's Linear Regression with feature scaling for optimal performance.
+- **Job Demand Prediction**: Predicting vacancy counts across different occupations and regions
+- **Salary Trend Analysis**: Understanding compensation patterns across industries
+- **Regional Analysis**: Identifying labor market trends by province/territory
+- **Industry Insights**: Analyzing demand patterns across NAICS sectors
+- **Occupational Analysis**: Understanding trends by NOC (National Occupational Classification) codes
+
+## 📊 Dataset
+
+- **Source**: Government of Canada Open Data Portal
+- **Title**: Job Postings Advertised on Canada's National Job Bank Website
+- **Structure**: Monthly CSV files with detailed job posting information
+- **Variables**: 
+  - Job title, NOC code, NAICS code
+  - Location (Province/Territory, City)
+  - Vacancies, salary, benefits
+  - Job requirements, employment terms
+- **Rationale**: Large, credible dataset updated monthly, rich in occupational and regional detail
 
 ## 📁 Project Structure
 
 ```
-spodify tracks Prediction/
+spodify-tracks-prediction/
 │
 ├── linear_regression_modeling.py  # Main model implementation
 ├── example_usage.py               # Usage examples and demonstrations
-├── dataset.csv                    # Spotify tracks dataset
+├── job-bank-open-data-all-job-postings-en-december2025.csv  # Job postings dataset
 ├── requirements.txt               # Python dependencies
-└── README.md                      # This file
+├── README.md                      # This file
+├── linear_regression_results.png  # Generated visualization (after running)
+└── feature_importance.png         # Feature importance plot (after running)
 ```
 
 ## 🚀 Quick Start
@@ -60,10 +76,10 @@ python linear_regression_modeling.py
 ```
 
 This will:
-- Load and preprocess the data
+- Load and preprocess the job postings data
 - Split into training and test sets
-- Scale features
-- Train the model
+- Scale features and create polynomial features
+- Train multiple models and select the best one
 - Validate with cross-validation
 - Generate predictions
 - Create visualizations
@@ -81,14 +97,16 @@ python example_usage.py
 ### Basic Usage
 
 ```python
-from linear_regression_modeling import SpotifyLinearRegression
+from linear_regression_modeling import JobMarketAnalysis
 
 # Initialize the model
-model = SpotifyLinearRegression(csv_path='dataset.csv')
+model = JobMarketAnalysis(
+    csv_path='job-bank-open-data-all-job-postings-en-december2025.csv'
+)
 
 # Run the complete pipeline
 metrics = model.run_full_pipeline(
-    target_column='popularity',
+    target_column='Vacancy Count',
     test_size=0.2,
     random_state=42,
     use_scaled=True,
@@ -105,17 +123,18 @@ print(f"Test RMSE: {metrics['test_rmse']:.4f}")
 For more control over the process:
 
 ```python
-from linear_regression_modeling import SpotifyLinearRegression
-import pandas as pd
+from linear_regression_modeling import JobMarketAnalysis
 
 # Initialize
-model = SpotifyLinearRegression(csv_path='dataset.csv')
+model = JobMarketAnalysis(
+    csv_path='job-bank-open-data-all-job-postings-en-december2025.csv'
+)
 
 # Step 1: Load data
 model.load_data()
 
 # Step 2: Preprocess
-X, y = model.preprocess_data(target_column='popularity')
+X, y = model.preprocess_data(target_column='Vacancy Count')
 
 # Step 3: Split data
 model.split_data(test_size=0.2, random_state=42)
@@ -124,54 +143,34 @@ model.split_data(test_size=0.2, random_state=42)
 model.scale_features()
 
 # Step 5: Train model
-model.train_model(use_scaled=True)
+model.train_best_model(use_scaled=True)
 
 # Step 6: Validate
 metrics = model.validate_model(use_scaled=True, cv_folds=5)
 
-# Step 7: Make predictions on new data
-new_track = pd.DataFrame({
-    'danceability': [0.75],
-    'energy': [0.65],
-    'valence': [0.80],
-    'tempo': [120.0],
-    'loudness': [-5.0],
-    'Duration_min': [3.5],
-    'explicit': [0]  # 0 for False, 1 for True
-})
+# Step 7: Make predictions
+predictions = model.make_predictions(use_scaled=True)
 
-prediction = model.model.predict(model.scaler.transform(new_track))
-print(f"Predicted popularity: {prediction[0]:.2f}")
+# Step 8: Visualize results
+model.visualize_results()
 ```
 
-### Making Predictions on New Data
+### Predicting Salary Trends
+
+To analyze salary trends instead of vacancy counts:
 
 ```python
-import pandas as pd
-from linear_regression_modeling import SpotifyLinearRegression
+model = JobMarketAnalysis(
+    csv_path='job-bank-open-data-all-job-postings-en-december2025.csv'
+)
 
-# Train the model first
-model = SpotifyLinearRegression(csv_path='dataset.csv')
-model.load_data()
-model.preprocess_data(target_column='popularity')
-model.split_data(test_size=0.2, random_state=42)
-model.scale_features()
-model.train_model(use_scaled=True)
-
-# Prepare new track data
-new_tracks = pd.DataFrame({
-    'danceability': [0.75, 0.50, 0.90],
-    'energy': [0.65, 0.40, 0.85],
-    'valence': [0.80, 0.30, 0.95],
-    'tempo': [120.0, 90.0, 140.0],
-    'loudness': [-5.0, -10.0, -3.0],
-    'Duration_min': [3.5, 4.0, 3.0],
-    'explicit': [0, 1, 0]
-})
-
-# Make predictions
-predictions = model.model.predict(model.scaler.transform(new_tracks))
-print("Predicted popularities:", predictions)
+metrics = model.run_full_pipeline(
+    target_column='Salary_Annual',  # Predict annual salary
+    test_size=0.2,
+    random_state=42,
+    use_scaled=True,
+    cv_folds=5
+)
 ```
 
 ## 📊 Model Features
@@ -180,13 +179,14 @@ print("Predicted popularities:", predictions)
 
 The model uses the following features:
 
-1. **danceability** (0.0-1.0): How suitable a track is for dancing
-2. **energy** (0.0-1.0): Perceptual measure of intensity and power
-3. **valence** (0.0-1.0): Musical positiveness conveyed by a track
-4. **tempo** (BPM): Overall estimated tempo of a track
-5. **loudness** (dB): Overall loudness of a track
-6. **Duration_min**: Track duration in minutes
-7. **explicit** (0/1): Whether the track contains explicit content
+1. **Salary Information**: Annual salary estimates, salary ranges
+2. **Location**: Province/Territory (encoded)
+3. **Employment Details**: Employment type, employment term
+4. **Education**: Education level required (LOS)
+5. **Experience**: Experience level required
+6. **Industry**: NAICS sector codes
+7. **Occupation**: NOC major group codes
+8. **Work Hours**: Minimum and maximum hours per week
 
 ### Model Performance
 
@@ -199,10 +199,11 @@ The model provides:
 ### Visualizations
 
 The model generates:
-- Feature coefficient plots
+- Feature importance/coefficient plots
 - Actual vs Predicted scatter plots
 - Residual plots
-- Feature importance charts
+- Error distribution charts
+- Model performance metrics summary
 
 ## 📦 Dependencies
 
@@ -219,18 +220,21 @@ All required packages are listed in `requirements.txt`:
 
 ### Model Parameters
 
-- `target_column`: Name of the target variable (default: 'popularity')
+- `target_column`: Name of the target variable (default: 'Vacancy Count')
+  - Options: 'Vacancy Count', 'Salary_Annual', or other numeric columns
 - `test_size`: Proportion of data for testing (default: 0.2)
 - `random_state`: Random seed for reproducibility (default: 42)
 - `use_scaled`: Whether to use scaled features (default: True)
 - `cv_folds`: Number of cross-validation folds (default: 5)
 
-### Feature Scaling
+### Feature Engineering
 
-The model uses StandardScaler by default, which:
-- Centers features to have mean = 0
-- Scales features to have standard deviation = 1
-- Improves model performance and convergence
+The model automatically:
+- Converts hourly salaries to annual equivalents
+- Extracts NOC major groups and NAICS sectors
+- Encodes categorical variables (provinces, employment types, etc.)
+- Creates polynomial interaction features
+- Selects the most important features
 
 ## 📈 Understanding the Results
 
@@ -245,46 +249,89 @@ The model uses StandardScaler by default, which:
 - **RMSE**: 
   - Lower is better
   - Measured in the same units as the target variable
-  - Penalizes large errors more than small ones
+  - For vacancy count: number of vacancies
+  - For salary: dollars
 
 - **MAE**: 
   - Lower is better
   - Average absolute difference between predictions and actual values
   - Easier to interpret than RMSE
 
-### Interpreting Coefficients
+### Interpreting Feature Importance
 
-The model shows feature coefficients indicating:
-- **Positive coefficient**: Feature increases popularity
-- **Negative coefficient**: Feature decreases popularity
-- **Larger absolute value**: Stronger influence on popularity
+The model shows feature coefficients/importance indicating:
+- **Positive coefficient**: Feature increases the target (e.g., more vacancies, higher salary)
+- **Negative coefficient**: Feature decreases the target
+- **Larger absolute value**: Stronger influence on the target
+
+## 🎯 Use Cases
+
+This model is useful for:
+
+1. **Employers**: 
+   - Understanding competitive salary ranges
+   - Identifying regions with high demand
+   - Planning recruitment strategies
+
+2. **Job Seekers**:
+   - Understanding market demand for their skills
+   - Identifying high-demand regions
+   - Salary expectations by location/industry
+
+3. **Policymakers**:
+   - Identifying labor market trends
+   - Understanding regional disparities
+   - Planning workforce development programs
+
+4. **Labor Market Analysts**:
+   - Analyzing hiring patterns
+   - Understanding skills demand
+   - Regional economic analysis
 
 ## 🛠️ Troubleshooting
 
 ### Common Issues
 
-1. **FileNotFoundError: dataset.csv**
-   - Ensure `dataset.csv` is in the same directory as the script
+1. **FileNotFoundError: job-bank-open-data-all-job-postings-en-december2025.csv**
+   - Ensure the CSV file is in the same directory as the script
    - Check the file path in the `csv_path` parameter
 
-2. **Missing dependencies**
+2. **Encoding errors**
+   - The script tries multiple encodings (UTF-16, UTF-8, Latin-1)
+   - If issues persist, check the file encoding manually
+
+3. **Missing dependencies**
    - Run: `pip install -r requirements.txt`
    - Ensure you're using the correct Python version
 
-3. **Memory errors with large datasets**
+4. **Memory errors with large datasets**
    - Reduce dataset size or use data sampling
    - Close other applications to free memory
 
-4. **Import errors**
+5. **Import errors**
    - Activate your virtual environment
    - Reinstall packages: `pip install --upgrade -r requirements.txt`
 
 ## 📝 Notes
 
-- The model assumes your dataset has the required columns
-- Ensure `explicit` column is boolean or can be converted to 0/1
-- Duration is automatically converted from milliseconds to minutes
-- Missing values are automatically removed during preprocessing
+- The model automatically handles missing values and outliers
+- Categorical variables are automatically encoded
+- Salary conversion assumes 40 hours/week, 52 weeks/year for hourly rates
+- The model selects the best performing algorithm automatically
+- Feature engineering creates interaction terms to capture complex relationships
+
+## 🔍 Data Preprocessing
+
+The model performs extensive preprocessing:
+
+1. **Salary Conversion**: Converts hourly to annual salaries for consistency
+2. **Feature Extraction**: Extracts NOC major groups and NAICS sectors
+3. **Encoding**: Encodes categorical variables (provinces, employment types)
+4. **Missing Value Handling**: Fills numeric missing values with medians
+5. **Outlier Handling**: Caps or removes extreme values using IQR method
+6. **Feature Scaling**: Normalizes features to mean=0, std=1
+7. **Polynomial Features**: Creates interaction terms
+8. **Feature Selection**: Selects top K most important features
 
 ## 📧 Support
 
@@ -296,5 +343,6 @@ This project is provided as-is for client use.
 
 ---
 
-**Version**: 1.0  
-**Last Updated**: January 2026
+**Version**: 2.0  
+**Last Updated**: January 2026  
+**Dataset**: Government of Canada Open Data Portal - Job Bank Postings
